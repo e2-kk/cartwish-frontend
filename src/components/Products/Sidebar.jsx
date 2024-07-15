@@ -3,6 +3,7 @@ import React from "react";
 import "./Sidebar.css";
 import NavLinks from "../Navbar/NavLinks";
 import useData from "../../hooks/useData";
+import config from "../../config.json";
 
 const Sidebar = () => {
   const { data: categories, errors } = useData("/category");
@@ -19,7 +20,7 @@ const Sidebar = () => {
                 id={category._id}
                 title={category.name}
                 link={`/products?category=${category.name}`}
-                emoji={`http://localhost:3000/category/${category.image}`}
+                emoji={`${config.backendURL}/category/${category.image}`}
                 sidebar={true}
               />
             );

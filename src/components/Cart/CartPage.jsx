@@ -9,6 +9,7 @@ import user from "../../assets/user.webp";
 import Table from "../Common/Table.jsx";
 import QuantityInput from "../SingleProduct/QuantityInput.jsx";
 import { checkoutAPI } from "../../services/orderServices";
+import config from "../../config.json";
 
 const CartPage = () => {
   const [subTotal, setSubTotal] = useState(0);
@@ -41,7 +42,7 @@ const CartPage = () => {
     <section className="align_center cart_page">
       <div className="align_center user_info">
         <img
-          src={`http://localhost:3000/profile/${userObj?.profilePic}`}
+          src={`${config.backendURL}/profile/${userObj?.profilePic}`}
           alt="user profile"
         />
         <div>
