@@ -36,7 +36,7 @@ const ProductCard = ({ product }) => {
             <button
               className="add_to_cart"
               onClick={() => {
-                addToCart(product);
+                addToCart(product, 1);
               }}
             >
               <img src={basket} alt="basket button"></img>
