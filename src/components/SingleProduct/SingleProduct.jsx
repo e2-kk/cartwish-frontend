@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, memo } from "react";
 import "./SingleProduct.css";
 import config from "../../config.json";
 import QuantityInput from "./QuantityInput.jsx";
@@ -72,4 +72,4 @@ const SingleProduct = () => {
   );
 };
 
-export default SingleProduct;
+export default memo(SingleProduct);

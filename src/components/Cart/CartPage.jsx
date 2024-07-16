@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext, useMemo } from "react";
+import React, { useEffect, useState, useContext, useMemo, memo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 
 import "./CartPage.css";
@@ -103,4 +103,4 @@ const CartPage = () => {
   );
 };
 
-export default CartPage;
+export default memo(CartPage);
