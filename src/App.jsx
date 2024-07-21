@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useReducer } from "react";
 import { ToastContainer, toast } from "react-toastify";
 
 import "./App.css";
@@ -20,9 +20,43 @@ import { removeFromCartAPI } from "./services/cartServices";
 
 setAuthToken(getJwt());
 
+function reduce(state, action) {
+  switch (action.type) {
+    case "ADD_TO_CART":
+      const updatedCart = [...cart];
+      const productIndex = updatedCart.findIndex(
+        (item) => item.product._id === product._id
+      );
+
+      const { product, quantity } = action.payload;
+
+      if (productIndex === -1) {
+        updatedCart.push({ product: product, quantity: quantity });
+      } else {
+        updatedCart[productIndex].quantity += quantity;
+      }
+
+      return updatedCart;
+
+    case "GET_CART":
+      return action.payload.products;
+
+    case "REVERT_CART":
+      action.payload.cart;
+
+    case "REMOVE_FROM_CART":
+      const oldCart = [...cart];
+      const newCart = oldCart.filter(
+        (item) => item.product._id !== action.payload.id
+      );
+      return newCart;
+  }
+}
+
 const App = () => {
   const [user, setUser] = useState(null);
-  const [cart, setCart] = useState([]);
+  //const [cart, setCart] = useState([]);
+  const [cart, dispatch] = useReducer(reduce, []);
 
   useEffect(() => {
     try {
@@ -36,40 +70,27 @@ const App = () => {
     } catch (error) {}
   }, []);
 
-  const addToCart = useCallback(
-    (product, quantity) => {
-      const updatedCart = [...cart];
-      const productIndex = updatedCart.findIndex(
-        (item) => item.product._id === product._id
-      );
+  const addToCart = useCallback(() => {
+    //function of useReducer hook
+    dispatch({ type: "ADD_TO_CART", payload: { product, quantity } });
 
-      if (productIndex === -1) {
-        updatedCart.push({ product: product, quantity: quantity });
-      } else {
-        updatedCart[productIndex].quantity += quantity;
-      }
+    //making call to CART API
+    addToCartAPI(product._id, quantity)
+      .then((response) => {
+        toast.success("Product Added Succesfully");
+      })
+      .catch((err) => {
+        toast.error("Failed to add product");
+        dispatch({ type: "REVERT_CART", payload: { cart } });
+      });
+  }, [cart]);
 
-      setCart(updatedCart);
-      addToCartAPI(product._id, quantity)
-        .then((response) => {
-          toast.success("Product Added Succesfully");
-        })
-        .catch((err) => {
-          toast.error("Failed to add product");
-          setCart(cart);
-        });
-    },
-    [cart]
-  );
   const removeFromCart = useCallback(
     (id) => {
-      const oldCart = [...cart];
-      const newCart = oldCart.filter((item) => item.product._id !== id);
-      setCart(newCart);
-
+      dispatch({ type: "REMOVE_FROM_CART", payload: { id } });
       removeFromCartAPI(id).catch((err) => {
         toast.error("Something went wrong!");
-        setCart(oldCart);
+        dispatch({ type: "REVERT_CART", payload: { cart } });
       });
     },
     [cart]
@@ -84,20 +105,20 @@ const App = () => {
       );
       if (type === "increase") {
         updatedCart[productIndex].quantity += 1;
-        setCart(updatedCart);
+        dispatch({ type: "GET_CART", payload: { products: updatedCart } });
 
         increaseProductAPI(id).catch((err) => {
           toast.error("Something went wrong!");
-          setCart(oldCart);
+          dispatch({ type: "REVERT_CART", payload: { cart } });
         });
       }
       if (type === "decrease") {
         updatedCart[productIndex].quantity -= 1;
-        setCart(updatedCart);
+        dispatch({ type: "GET_CART", payload: { products: updateCart } });
 
         decreaseProductAPI(id).catch((err) => {
           toast.error("Something went wrong!");
-          setCart(oldCart);
+          dispatch({ type: "REVERT_CART", payload: { cart } });
         });
       }
     },
@@ -106,7 +127,9 @@ const App = () => {
 
   const getCart = useCallback(() => {
     getCartAPI()
-      .then((response) => setCart(response.data))
+      .then((response) =>
+        dispatch({ type: "GET_CART", payload: { products: response.data } })
+      )
       .catch((err) => {
         toast.error("Something went wrong!");
       });
@@ -120,9 +143,7 @@ const App = () => {
 
   return (
     <userContext.Provider value={user}>
-      <cartContext.Provider
-        value={{ cart, addToCart, removeFromCart, updateCart, setCart }}
-      >
+      <cartContext.Provider value={{ addToCart, removeFromCart, updateCart }}>
         <div className="app">
           <Navbar />
           <main>
